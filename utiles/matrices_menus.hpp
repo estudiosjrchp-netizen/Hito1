@@ -24,8 +24,48 @@ void resetColor() {
 
 // funciones_imprimir matriz
 
+
+
+//funcion para imprimir una matriz en la consola, sin considerar un fondo de color
+
+void imprimirMatriz(int fila, int columna, const vvi& matriz) {
+    
+    for (int i = 0; i < matriz.size(); i++) {
+        for (int j = 0; j < matriz[i].size(); j++) {
+            
+            gotoxy(columna + j, fila + i);
+            
+            switch (matriz[i][j]) {
+                case 0: // color neutral
+                    std::cout << "\033[0m";
+                    break;
+                case 1: // color rojo puro
+                    std::cout << "\033[38;2;255;0;0m";
+                    break;
+                case 2: // color verde puro
+                    std::cout << "\033[38;2;0;255;0m";
+                    break;
+                case 3: // color azul puro
+                    std::cout << "\033[38;2;0;0;255m";
+                    break;
+                case 4: // color amarillo puro
+                    std::cout << "\033[38;2;255;255;0m";
+                    break;
+                case 5: // color naranja puro
+                    std::cout << "\033[38;2;255;165;0m";
+                    break;
+                case 6: // color negro puro
+                    std::cout << "\033[38;2;0;0;0m";
+                    break;
+            }        
+            std::cout << char(219);             
+        }
+    }
+    resetColor(); // Reset de color por defecto al final de la impresión
+}
+
 /*Funcion para imprimir una matriz en la consola, considerando un fondo de color*/
-void imprimirMatriz(int fila, int columna, const vvi& matriz, const vvi& fondo) {
+void sobreescribirMatriz(int fila, int columna, const vvi& matriz, const vvi& fondo) {
     
     for (int i = 0; i < matriz.size(); i++) {
         for (int j = 0; j < matriz[i].size(); j++) {
@@ -70,7 +110,15 @@ void imprimirMatriz(int fila, int columna, const vvi& matriz, const vvi& fondo) 
 
 #pragma region matrices
 
+//matriz spotify;
 
+vvi matriz_spotify = {
+{2,	2,	2,	0,	2,	2,	2,	0,	2,	2,	2,	0,	2,	2,	2,	0,	2,	0,	2,	2,	2,	0,	2,	0,	2},
+{2,	0,	0,	0,	2,	0,	2,	0,	2,	0,	2,	0,	0,	2,	0,	0,	2,	0,	2,	0,	0,	0,	2,	0,	2},
+{2,	2,	2,	0,	2,	2,	2,	0,	2,	0,	2,	0,	0,	2,	0,	0,	2,	0,	2,	2,	2,	0,	2,	2,	2},
+{0,	0,	2,	0,	2,	0,	0,	0,	2,	0,	2,	0,	0,	2,	0,	0,	2,	0,	2,	0,	0,	0,	0,	2,	0},
+{2,	2,	2,	0,	2,	0,	0,	0,	2,	2,	2,	0,	0,	2,	0,	0,	2,	0,	2,	0,	0,	0,	0,	2,	0},
+};
 
 
 
@@ -80,6 +128,14 @@ void imprimirMatriz(int fila, int columna, const vvi& matriz, const vvi& fondo) 
 
 #pragma region menus
 
+//menu inicio
+
+
+void imp_menu_inicio(){
+
+    imprimirMatriz(1, (110 / 2) - matriz_spotify[0].size() / 2, matriz_spotify);
+
+}
 
 
 
