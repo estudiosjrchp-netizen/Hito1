@@ -33,12 +33,12 @@ void imprimirMatriz(int fila, int columna, const vvi& matriz) {
     for (int i = 0; i < matriz.size(); i++) {
         for (int j = 0; j < matriz[i].size(); j++) {
             
+            if (matriz[i][j] == 0) {
+                continue; // Saltar la impresión de elementos con valor 0
+            }
             gotoxy(columna + j, fila + i);
             
             switch (matriz[i][j]) {
-                case 0: // color neutral
-                    std::cout << "\033[0m";
-                    break;
                 case 1: // color rojo puro
                     std::cout << "\033[38;2;255;0;0m";
                     break;
@@ -58,7 +58,7 @@ void imprimirMatriz(int fila, int columna, const vvi& matriz) {
                     std::cout << "\033[38;2;0;0;0m";
                     break;
             }        
-            std::cout << char(219);             
+            std::cout << "\u2588";             
         }
     }
     resetColor(); // Reset de color por defecto al final de la impresión
