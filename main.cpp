@@ -1,6 +1,7 @@
 #include <iostream>
+#include "utiles/matrices_menus.hpp"
 
 int main(){
-    std::cout << "Hello World!" << std::endl;
+    imp_menu_inicio();
     return 0;
 }
