@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include "teclado.hpp"
+
 
 using vvi = std::vector<std::vector<int>>;
 
@@ -135,7 +137,11 @@ void imp_menu_inicio(){
 
     imprimirMatriz(1, (110 / 2) - matriz_spotify[0].size() / 2, matriz_spotify);
 
+
+
+    
 }
+
 
 
 
