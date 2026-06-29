@@ -75,7 +75,7 @@ private:
                     cout << "  " << opciones[i] << "     ";
                 }
             }
-
+            cout.flush();
             char tecla = obtenerTecla();
             
             // W o Flecha Arriba
