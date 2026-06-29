@@ -9,6 +9,8 @@ private:
     int idUsuario; 
 
 public:
+
+
     Usuario() {} 
     Usuario(std::string _username, std::string _password, std::string _email, int _id) 
         : username(_username), password(_password), email(_email), idUsuario(_id) {}
