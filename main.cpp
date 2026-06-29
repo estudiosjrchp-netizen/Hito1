@@ -1,8 +1,7 @@
-#include <iostream>
-#include "utiles/matrices_menus.hpp"
+#include "controladora.hpp"
 
-int main(){
-    imp_menu_inicio();
-    
+int main() {
+    Controladora app;
+    app.iniciar();
     return 0;
 }
