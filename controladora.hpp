@@ -148,7 +148,7 @@ private:
         }
     }
 
-    // --- GENERADOR DE DATASET (Requisito Hito 1) ---
+    // --- GENERADOR DE DATASET  ---
     void generarDataset() {
         borrarArea(5, 12, 100, 20);
         string titulo = "--- GENERADOR DE DATASET ---";
