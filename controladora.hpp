@@ -110,27 +110,49 @@ private:
     }
 
     // --- CARGA DE DATOS ---
-    void cargarUsuarios() {
+void cargarUsuarios() {
         ifstream archivo("datos/usuarios.txt");
         if (!archivo.is_open()) return;
+        
         string linea;
+        int maxId = 0; // Variable para encontrar el ID más alto guardado
+
         while (getline(archivo, linea)) {
             if (linea.empty()) continue;
             stringstream ss(linea);
-            string user, email, pass;
+            string idStr, user, email, pass;
+
+            // Ahora leemos los 4 atributos en el orden correcto
+            getline(ss, idStr, ',');
             getline(ss, user, ',');
             getline(ss, email, ',');
             getline(ss, pass, ',');
-            Usuario nuevoUser(user, pass, email, generadorIds++);
+
+            int idLeido = stoi(idStr); // Convierte el texto del ID a un número entero
+            
+            // Registramos cuál ha sido el ID más alto hasta el momento
+            if (idLeido >= maxId) {
+                maxId = idLeido;
+            }
+
+            // Usamos el ID recuperado en lugar del generador manual
+            Usuario nuevoUser(user, pass, email, idLeido);
             tablaUsuarios.insert(user, nuevoUser);
         }
+        
+        // Actualizamos el generador para que asigne IDs nuevos a partir del más alto
+        if (maxId > 0) {
+            generadorIds = maxId + 1;
+        }
+        
         archivo.close();
     }
 
-    void guardarNuevoUsuario(const Usuario& u) {
+void guardarNuevoUsuario(const Usuario& u) {
         ofstream archivo("datos/usuarios.txt", ios::app);
         if (archivo.is_open()) {
-            archivo << "\n" << u.getUsername() << "," << u.getEmail() << "," << u.getPassword();
+            // Se añade el ID al principio de la línea
+            archivo << "\n" << u.getId() << "," << u.getUsername() << "," << u.getEmail() << "," << u.getPassword();
             archivo.close();
         }
     }
