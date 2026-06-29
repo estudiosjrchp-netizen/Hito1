@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <vector>
 #include <list>
@@ -12,26 +13,29 @@ private:
     vector<list<pair<K, V>>> table;
     size_t num_elements;
     size_t capacity;
+    
+    // MODIFICACIÓN: Atributo para almacenar la lambda de la función Hash compleja
+    function<size_t(const K&)> hash_func;
 
     size_t get_hash(const K& key) const {
-        return hash<K>{}(key) % capacity;
+        return hash_func(key) % capacity; // Usamos la lambda en lugar de std::hash
     }
 
 public:
-    HashTable(size_t size = 10) : capacity(size), num_elements(0) {
+    // MODIFICACIÓN: El constructor ahora recibe la lambda. Por defecto usa una básica si no se envía nada.
+    HashTable(size_t size = 10, function<size_t(const K&)> hf = [](const K& k){ return hash<K>{}(k); }) 
+        : capacity(size), num_elements(0), hash_func(hf) {
         table.resize(capacity);
     }
 
     void insert(const K& key, const V& value) {
         size_t index = get_hash(key);
-        
         for (auto& kv : table[index]) {
             if (kv.first == key) {
                 kv.second = value; // Actualizar si la clave ya existe
                 return;
             }
         }
-        // Agregar al final del bucket si no existe
         table[index].emplace_back(key, value);
         num_elements++;
     }
@@ -50,7 +54,6 @@ public:
     bool remove(const K& key) {
         size_t index = get_hash(key);
         auto& bucket = table[index];
-        
         for (auto it = bucket.begin(); it != bucket.end(); ++it) {
             if (it->first == key) {
                 bucket.erase(it);
@@ -65,7 +68,7 @@ public:
         for (size_t i = 0; i < capacity; i++) {
             cout << "Bucket " << i << ": ";
             for (const auto& kv : table[i]) {
-                cout << "{" << kv.first << ": " << kv.second << "} -> ";
+                cout << "{" << kv.first << ": ...} -> ";
             }
             cout << "NULL\n";
         }

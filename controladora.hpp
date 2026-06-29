@@ -3,136 +3,202 @@
 #include "utiles/teclado.hpp"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cstdlib>
+#include <functional>
 #include "entidades/Usuario.hpp"
 #include "estructuras/Hash_Table.hpp"
 
-
-
+using namespace std;
 
 class Controladora {
 private:
-    bool ejecutando;
-    int opcionSeleccionada;
+    HashTable<string, Usuario> tablaUsuarios;
+    Usuario usuarioActual;
+    bool usuarioLogueado;
+    int generadorIds;
+
+    void imprimirCentrado(string texto) {
+        int anchoTotal = 110;
+        int padding = (anchoTotal - texto.length()) / 2;
+        if (padding > 0) {
+            cout << string(padding, ' ') << texto << endl;
+        } else {
+            cout << texto << endl;
+        }
+    }
+
+    void cargarUsuarios() {
+        ifstream archivo("datos/usuarios.txt");
+        if (!archivo.is_open()) return;
+
+        string linea;
+        while (getline(archivo, linea)) {
+            if (linea.empty()) continue;
+            stringstream ss(linea);
+            string user, email, pass;
+            
+            // Leemos según tu formato: username, email, password
+            getline(ss, user, ',');
+            getline(ss, email, ',');
+            getline(ss, pass, ',');
+            
+            // Instanciamos el usuario y generamos un ID
+            Usuario nuevoUser(user, pass, email, generadorIds++);
+            tablaUsuarios.insert(user, nuevoUser);
+        }
+        archivo.close();
+    }
+
+    void guardarNuevoUsuario(const Usuario& u) {
+        ofstream archivo("datos/usuarios.txt", ios::app);
+        if (archivo.is_open()) {
+            archivo << "\n" << u.getUsername() << "," << u.getEmail() << "," << u.getPassword();
+            archivo.close();
+        }
+    }
 
 public:
-    Controladora() {
-        ejecutando = true;
-        opcionSeleccionada = 0;
+    Controladora() : usuarioLogueado(false), generadorIds(1) {
+        // RÚBRICA: Función Lambda para Hash Complejo (Polynomial Rolling Hash)
+        auto hashComplejo = [](const string& clave) -> size_t {
+            size_t hashVal = 0;
+            size_t p = 31;
+            for (char c : clave) {
+                hashVal = hashVal * p + c;
+            }
+            return hashVal;
+        };
+
+        // RÚBRICA: Instanciar Hash Table con template y lambda
+        tablaUsuarios = HashTable<string, Usuario>(100, hashComplejo);
+        
+        cargarUsuarios();
     }
 
     void iniciar() {
-        cursorVisible(false); 
-        //dibuando la parte estatica del fondo
-        dibujarInterfazEstatica(); 
+        cursorVisible(true);
+        bool salir = false;
+        while (!salir) {
+            limpiarPantalla();
+            cout << string(110, '=') << "\n\n";
+            imprimirCentrado("   ███████╗██████╗  ██████╗ ████████╗██╗███████╗██╗   ██╗ ");
+            imprimirCentrado("   ██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝ ");
+            imprimirCentrado("   ███████╗██████╔╝██║   ██║   ██║   ██║█████╗   ╚████╔╝  ");
+            imprimirCentrado("   ╚════██║██╔═══╝ ██║   ██║   ██║   ██║██╔══╝    ╚██╔╝   ");
+            imprimirCentrado("   ███████║██║     ╚██████╔╝   ██║   ██║██║        ██║    ");
+            imprimirCentrado("   ╚══════╝╚═╝      ╚═════╝    ╚═╝   ╚═╝╚═╝        ╚═╝    ");
+            cout << "\n";
+            cout << string(110, '=') << "\n\n";
+            imprimirCentrado("1. Iniciar Sesion");
+            imprimirCentrado("2. Crear Cuenta Nueva");
+            imprimirCentrado("3. Salir del Sistema");
+            cout << "\n" << string(110, '=') << "\n";
+            cout << "> Seleccione una opcion: ";
+            
+            string opcion;
+            getline(cin, opcion);
 
-        // 2. Bucle principal de la aplicación, la wea que va a cambiar, generalmente letras
-        while (ejecutando) {
-            mostrarMenuTextual();
-            procesarEntrada();
+            if (opcion == "1") iniciarSesion();
+            else if (opcion == "2") crearCuenta();
+            else if (opcion == "3") salir = true;
         }
-        
-        // Al salir, limpiamos pantalla 
-        std::cout << "\033[2J\033[1;1H"; 
+        limpiarPantalla();
+        cout << "\nSaliendo de la app. Hasta pronto!\n";
     }
 
-private:
-    void dibujarInterfazEstatica();
-    void mostrarMenuTextual();
-    void borrarPorcion(int filaInicio, int colInicio, int alto, int ancho);
-    void procesarEntrada();
-    void ejecutarAccion(int opcion);
-};
-
-
-void Controladora::borrarPorcion(int filaInicio, int colInicio, int alto, int ancho) {
-    for (int i = 0; i < alto; i++) {
-
-        // \033[Y;XH mueve el cursor a la Fila Y, Columna X
-        std::cout << "\033[" << (filaInicio + i) << ";" << colInicio << "H";
+    void crearCuenta() {
+        limpiarPantalla();
+        cout << string(110, '-') << "\n";
+        imprimirCentrado("--- CREAR NUEVA CUENTA ---");
+        cout << string(110, '-') << "\n\n";
         
-        // Imprime espacios para "limpiar" esa línea específica
-        for (int j = 0; j < ancho; j++) {
-            std::cout << " ";
+        string user, email, pass;
+        cout << "> Ingrese un nombre de usuario: ";
+        getline(cin, user);
+        
+        Usuario temp;
+        // RÚBRICA: Búsqueda O(1) usando el HashTable
+        if (tablaUsuarios.search(user, temp)) {
+            cout << "\n[!] El usuario '" << user << "' ya existe. Presione Enter para volver...";
+            obtenerTecla();
+            return;
+        }
+
+        cout << "> Ingrese su correo electronico: ";
+        getline(cin, email);
+        cout << "> Ingrese una contrasena: ";
+        getline(cin, pass);
+
+        Usuario nuevoUsuario(user, pass, email, generadorIds++);
+        tablaUsuarios.insert(user, nuevoUsuario);
+        guardarNuevoUsuario(nuevoUsuario);
+        
+        cout << "\n[+] Cuenta creada con exito! Ya puedes iniciar sesion. Presione Enter...";
+        obtenerTecla();
+    }
+
+    void iniciarSesion() {
+        limpiarPantalla();
+        cout << string(110, '-') << "\n";
+        imprimirCentrado("--- INICIAR SESION ---");
+        cout << string(110, '-') << "\n\n";
+        
+        string user, pass;
+        cout << "> Usuario: ";
+        getline(cin, user);
+        cout << "> Contrasena: ";
+        getline(cin, pass);
+
+        Usuario userEncontrado;
+        // Pasamos 'userEncontrado' por referencia como pide tu método search
+        if (tablaUsuarios.search(user, userEncontrado)) {
+            if (userEncontrado.getPassword() == pass) {
+                usuarioActual = userEncontrado;
+                usuarioLogueado = true;
+                menuPrincipal(); // Ir al menú interno
+            } else {
+                cout << "\n[!] Contrasena incorrecta. Presione Enter para volver...";
+                obtenerTecla();
+            }
+        } else {
+            cout << "\n[!] Usuario no encontrado. Presione Enter para volver...";
+            obtenerTecla();
         }
     }
-}
 
+    void menuPrincipal() {
+        bool cerrarSesion = false;
+        while (!cerrarSesion) {
+            limpiarPantalla();
+            cout << string(110, '=') << "\n";
+            imprimirCentrado("=== SPOTIFY: MENU PRINCIPAL ===");
+            imprimirCentrado("Usuario Actual: " + usuarioActual.getUsername() + " | Email: " + usuarioActual.getEmail());
+            cout << string(110, '=') << "\n\n";
+            
+            imprimirCentrado("1. Perfil y Usuarios");
+            imprimirCentrado("2. Explorar Canciones (Arbol AVL)");
+            imprimirCentrado("3. Mis Playlists (Lista Doblemente Enlazada)");
+            imprimirCentrado("4. Recomendaciones Inteligentes (Grafo)");
+            imprimirCentrado("5. Cerrar Sesion");
+            cout << "\n" << string(110, '=') << "\n";
+            cout << "> Seleccione una opcion: ";
 
-void Controladora::dibujarInterfazEstatica() {
-    // Limpiamos todo al arrancar la app por primera vez
-    std::cout << "\033[2J\033[1;1H"; 
+            string opcion;
+            getline(cin, opcion);
 
-    std::cout << "\033[33m"; 
-    
-    std::cout << "\033[0m";  
-}
-
-void Controladora::mostrarMenuTextual() {
-    // Coordenadas calculadas para 110x40; RECORDAR MANIPULAR LOS AJUSTES DE LA VENTANA/TERMINAL/CONSOLA PARA QUE COINCIDA CON ESTO, SINO SE DESORDENA TODO
-    int fila = 17;
-    int col = 37;
-
-    // 1. Borramos SOLO el área donde va el menú (alto 8, ancho 35)
-    borrarPorcion(fila, col, 8, 35); 
-
-    // 2. Redibujamos el texto en el centro exacto
-    std::cout << "\033[" << fila << ";" << col << "H" << "=== SPOTIFY: MENÚ PRINCIPAL ===";
-    
-    // Usamos el color verde de Spotify para la opción seleccionada
-    std::cout << "\033[" << fila + 2 << ";" << col << "H" << (opcionSeleccionada == 0 ? "\033[32m> 1. Perfil y Usuarios\033[0m" : "  1. Perfil y Usuarios");             
-    std::cout << "\033[" << fila + 3 << ";" << col << "H" << (opcionSeleccionada == 1 ? "\033[32m> 2. Explorar Canciones\033[0m" : "  2. Explorar Canciones");             
-    std::cout << "\033[" << fila + 4 << ";" << col << "H" << (opcionSeleccionada == 2 ? "\033[32m> 3. Mis Playlists\033[0m" : "  3. Mis Playlists");
-    std::cout << "\033[" << fila + 5 << ";" << col << "H" << (opcionSeleccionada == 3 ? "\033[32m> 4. Salir\033[0m" : "  4. Salir");
-    std::cout << std::flush; 
-}
-
-void Controladora::procesarEntrada() {
-    // ESTA FUNCIÓN DEBE DETENER EL BUCLE HASTA QUE PRESIONES ALGO.
-    char tecla = obtenerTecla(); 
-
-    // En Linux, las flechas envían 27 (ESC), 91 ([), y luego 65 (Arriba) o 66 (Abajo)
-    if (tecla == 27) { 
-        char corchete = obtenerTecla();
-        if (corchete == 91) {
-            char direccion = obtenerTecla();
-            if (direccion == 65) { // Flecha Arriba
-                opcionSeleccionada--;
-                if (opcionSeleccionada < 0) opcionSeleccionada = 3; // Efecto circular
-            } else if (direccion == 66) { // Flecha Abajo
-                opcionSeleccionada++;
-                if (opcionSeleccionada > 3) opcionSeleccionada = 0; // Efecto circular
+            if (opcion == "1") {
+                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
+            } else if (opcion == "2") {
+                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
+            } else if (opcion == "3") {
+                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
+            } else if (opcion == "4") {
+                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
+            } else if (opcion == "5") {
+                usuarioLogueado = false;
+                cerrarSesion = true;
             }
         }
-    } 
-
-    else if (tecla == 10 || tecla == 13) {
-        ejecutarAccion(opcionSeleccionada);
     }
-}
-
-void Controladora::ejecutarAccion(int opcion) {
-
-    borrarPorcion(25, 37, 2, 50);
-    std::cout << "\033[25;37H"; 
-    
-    switch(opcion) {
-        case 0:
-            std::cout << "Abriendo módulo de Perfil y Usuarios...";
-            break;
-        case 1:
-            std::cout << "Abriendo Explorador de Canciones...";
-            break;
-        case 2:
-            std::cout << "Cargando Playlists...";
-            break;
-        case 3:
-            std::cout << "Saliendo de la app. ¡Hasta pronto!";
-            ejecutando = false; 
-            break;
-    }
-    
- 
-    std::cout << "\nPresiona cualquier tecla para volver...";
-    obtenerTecla(); 
-}
+};
