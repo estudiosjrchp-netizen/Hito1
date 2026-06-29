@@ -6,6 +6,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <functional>
+#include <vector>
 #include "entidades/Usuario.hpp"
 #include "estructuras/Hash_Table.hpp"
 
@@ -18,32 +19,108 @@ private:
     bool usuarioLogueado;
     int generadorIds;
 
-    void imprimirCentrado(string texto) {
-        int anchoTotal = 110;
-        int padding = (anchoTotal - texto.length()) / 2;
-        if (padding > 0) {
-            cout << string(padding, ' ') << texto << endl;
-        } else {
-            cout << texto << endl;
+    // --- FUNCIONES DE DIBUJO Y CONSOLA ---
+    void borrarArea(int x, int y, int ancho, int alto) {
+        for (int i = 0; i < alto; i++) {
+            gotoxy(x, y + i);
+            cout << string(ancho, ' '); // Sobreescribe con espacios
         }
     }
 
+    void dibujarMarcoEstaticoPrincipal() {
+        limpiarPantalla();
+        cursorVisible(false);
+        gotoxy(0, 0); cout << string(110, '=');
+        gotoxy(0, 39); cout << string(110, '=');
+
+        int logoY = 2;
+        int startX = (110 - 58) / 2;
+        gotoxy(startX, logoY++); cout << "   ███████╗██████╗  ██████╗ ████████╗██╗███████╗██╗   ██╗ ";
+        gotoxy(startX, logoY++); cout << "   ██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝ ";
+        gotoxy(startX, logoY++); cout << "   ███████╗██████╔╝██║   ██║   ██║   ██║█████╗   ╚████╔╝  ";
+        gotoxy(startX, logoY++); cout << "   ╚════██║██╔═══╝ ██║   ██║   ██║   ██║██╔══╝    ╚██╔╝   ";
+        gotoxy(startX, logoY++); cout << "   ███████║██║     ╚██████╔╝   ██║   ██║██║        ██║    ";
+        gotoxy(startX, logoY++); cout << "   ╚══════╝╚═╝      ╚═════╝    ╚═╝   ╚═╝╚═╝        ╚═╝    ";
+
+        gotoxy(0, 10); cout << string(110, '=');
+    }
+
+    void dibujarMarcoUsuarioLogueado() {
+        limpiarPantalla();
+        cursorVisible(false);
+        gotoxy(0, 0); cout << string(110, '=');
+        
+        string titulo = "=== SPOTIFY: MENU PRINCIPAL ===";
+        gotoxy((110 - titulo.length()) / 2, 2); cout << titulo;
+        
+        string info = "Usuario: " + usuarioActual.getUsername() + " | Email: " + usuarioActual.getEmail();
+        gotoxy((110 - info.length()) / 2, 4); cout << info;
+        
+        gotoxy(0, 6); cout << string(110, '=');
+        gotoxy(0, 39); cout << string(110, '=');
+    }
+
+    // --- MOTOR DEL MENÚ INTERACTIVO ---
+    int menuInteractivo(vector<string> opciones, int startX, int startY) {
+        int seleccion = 0;
+        cursorVisible(false);
+        
+        while (true) {
+            // Imprimir opciones
+            for (size_t i = 0; i < opciones.size(); i++) {
+                gotoxy(startX, startY + i + (i * 1)); // i * 1 para dar espaciado
+                if (i == seleccion) {
+                    cout << "\033[32m> " << opciones[i] << " <\033[0m   "; // Verde y remarcado
+                } else {
+                    cout << "  " << opciones[i] << "     ";
+                }
+            }
+
+            char tecla = obtenerTecla();
+            
+            // W o Flecha Arriba
+            if (tecla == 'w' || tecla == 'W' || tecla == 72 || tecla == 65) {
+                seleccion--;
+                if (seleccion < 0) seleccion = opciones.size() - 1;
+            } 
+            // S o Flecha Abajo
+            else if (tecla == 's' || tecla == 'S' || tecla == 80 || tecla == 66) {
+                seleccion++;
+                if (seleccion >= opciones.size()) seleccion = 0;
+            } 
+            // Enter
+            else if (tecla == '\r' || tecla == '\n') {
+                return seleccion;
+            }
+            // Lógica para flechas en Linux (Secuencia \033[A o \033[B)
+            else if (tecla == 27) { 
+                char tecla2 = obtenerTecla();
+                if (tecla2 == '[') {
+                    char tecla3 = obtenerTecla();
+                    if (tecla3 == 'A') { // Arriba
+                        seleccion--;
+                        if (seleccion < 0) seleccion = opciones.size() - 1;
+                    } else if (tecla3 == 'B') { // Abajo
+                        seleccion++;
+                        if (seleccion >= opciones.size()) seleccion = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // --- CARGA DE DATOS ---
     void cargarUsuarios() {
         ifstream archivo("datos/usuarios.txt");
         if (!archivo.is_open()) return;
-
         string linea;
         while (getline(archivo, linea)) {
             if (linea.empty()) continue;
             stringstream ss(linea);
             string user, email, pass;
-            
-            // Leemos según tu formato: username, email, password
             getline(ss, user, ',');
             getline(ss, email, ',');
             getline(ss, pass, ',');
-            
-            // Instanciamos el usuario y generamos un ID
             Usuario nuevoUser(user, pass, email, generadorIds++);
             tablaUsuarios.insert(user, nuevoUser);
         }
@@ -60,7 +137,6 @@ private:
 
 public:
     Controladora() : usuarioLogueado(false), generadorIds(1) {
-        // RÚBRICA: Función Lambda para Hash Complejo (Polynomial Rolling Hash)
         auto hashComplejo = [](const string& clave) -> size_t {
             size_t hashVal = 0;
             size_t p = 31;
@@ -69,133 +145,118 @@ public:
             }
             return hashVal;
         };
-
-        // RÚBRICA: Instanciar Hash Table con template y lambda
         tablaUsuarios = HashTable<string, Usuario>(100, hashComplejo);
-        
         cargarUsuarios();
     }
 
     void iniciar() {
-        cursorVisible(true);
+        dibujarMarcoEstaticoPrincipal();
         bool salir = false;
+        
         while (!salir) {
-            limpiarPantalla();
-            cout << string(110, '=') << "\n\n";
-            imprimirCentrado("   ███████╗██████╗  ██████╗ ████████╗██╗███████╗██╗   ██╗ ");
-            imprimirCentrado("   ██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝██║██╔════╝╚██╗ ██╔╝ ");
-            imprimirCentrado("   ███████╗██████╔╝██║   ██║   ██║   ██║█████╗   ╚████╔╝  ");
-            imprimirCentrado("   ╚════██║██╔═══╝ ██║   ██║   ██║   ██║██╔══╝    ╚██╔╝   ");
-            imprimirCentrado("   ███████║██║     ╚██████╔╝   ██║   ██║██║        ██║    ");
-            imprimirCentrado("   ╚══════╝╚═╝      ╚═════╝    ╚═╝   ╚═╝╚═╝        ╚═╝    ");
-            cout << "\n";
-            cout << string(110, '=') << "\n\n";
-            imprimirCentrado("1. Iniciar Sesion");
-            imprimirCentrado("2. Crear Cuenta Nueva");
-            imprimirCentrado("3. Salir del Sistema");
-            cout << "\n" << string(110, '=') << "\n";
-            cout << "> Seleccione una opcion: ";
+            borrarArea(5, 12, 100, 20); // Limpiar zona dinámica de dibujo central
             
-            string opcion;
-            getline(cin, opcion);
+            vector<string> opciones = {
+                "Iniciar Sesion", 
+                "Crear Cuenta Nueva", 
+                "Salir del Sistema"
+            };
+            
+            int startX = (110 - 20) / 2; // Centrado manual aprox
+            int seleccion = menuInteractivo(opciones, startX, 15);
 
-            if (opcion == "1") iniciarSesion();
-            else if (opcion == "2") crearCuenta();
-            else if (opcion == "3") salir = true;
+            if (seleccion == 0) iniciarSesion();
+            else if (seleccion == 1) crearCuenta();
+            else if (seleccion == 2) salir = true;
         }
+        
         limpiarPantalla();
-        cout << "\nSaliendo de la app. Hasta pronto!\n";
+        gotoxy(0,0);
+        cout << "\033[32mSaliendo de la app. Hasta pronto!\033[0m\n";
     }
 
     void crearCuenta() {
-        limpiarPantalla();
-        cout << string(110, '-') << "\n";
-        imprimirCentrado("--- CREAR NUEVA CUENTA ---");
-        cout << string(110, '-') << "\n\n";
-        
+        borrarArea(5, 12, 100, 20);
+        string titulo = "--- CREAR NUEVA CUENTA ---";
+        gotoxy((110 - titulo.length()) / 2, 13); cout << "\033[33m" << titulo << "\033[0m"; // Título en amarillo
+
         string user, email, pass;
-        cout << "> Ingrese un nombre de usuario: ";
-        getline(cin, user);
+        gotoxy(30, 16); cout << "Nombre de usuario  : ";
+        gotoxy(30, 18); cout << "Correo Electronico : ";
+        gotoxy(30, 20); cout << "Contrasena         : ";
+
+        cursorVisible(true);
+        gotoxy(51, 16); getline(cin, user);
         
         Usuario temp;
-        // RÚBRICA: Búsqueda O(1) usando el HashTable
         if (tablaUsuarios.search(user, temp)) {
-            cout << "\n[!] El usuario '" << user << "' ya existe. Presione Enter para volver...";
+            cursorVisible(false);
+            gotoxy(30, 23); cout << "\033[31m[!] El usuario ya existe. Presione Enter...\033[0m";
             obtenerTecla();
             return;
         }
 
-        cout << "> Ingrese su correo electronico: ";
-        getline(cin, email);
-        cout << "> Ingrese una contrasena: ";
-        getline(cin, pass);
+        gotoxy(51, 18); getline(cin, email);
+        gotoxy(51, 20); getline(cin, pass);
+        cursorVisible(false);
 
         Usuario nuevoUsuario(user, pass, email, generadorIds++);
         tablaUsuarios.insert(user, nuevoUsuario);
         guardarNuevoUsuario(nuevoUsuario);
         
-        cout << "\n[+] Cuenta creada con exito! Ya puedes iniciar sesion. Presione Enter...";
+        gotoxy(30, 23); cout << "\033[32m[+] Cuenta creada con exito! Presione Enter...\033[0m";
         obtenerTecla();
     }
 
     void iniciarSesion() {
-        limpiarPantalla();
-        cout << string(110, '-') << "\n";
-        imprimirCentrado("--- INICIAR SESION ---");
-        cout << string(110, '-') << "\n\n";
-        
+        borrarArea(5, 12, 100, 20);
+        string titulo = "--- INICIAR SESION ---";
+        gotoxy((110 - titulo.length()) / 2, 13); cout << "\033[33m" << titulo << "\033[0m";
+
         string user, pass;
-        cout << "> Usuario: ";
-        getline(cin, user);
-        cout << "> Contrasena: ";
-        getline(cin, pass);
+        gotoxy(35, 16); cout << "Usuario    : ";
+        gotoxy(35, 18); cout << "Contrasena : ";
+
+        cursorVisible(true);
+        gotoxy(48, 16); getline(cin, user);
+        gotoxy(48, 18); getline(cin, pass);
+        cursorVisible(false);
 
         Usuario userEncontrado;
-        // Pasamos 'userEncontrado' por referencia como pide tu método search
-        if (tablaUsuarios.search(user, userEncontrado)) {
-            if (userEncontrado.getPassword() == pass) {
-                usuarioActual = userEncontrado;
-                usuarioLogueado = true;
-                menuPrincipal(); // Ir al menú interno
-            } else {
-                cout << "\n[!] Contrasena incorrecta. Presione Enter para volver...";
-                obtenerTecla();
-            }
+        if (tablaUsuarios.search(user, userEncontrado) && userEncontrado.getPassword() == pass) {
+            usuarioActual = userEncontrado;
+            usuarioLogueado = true;
+            menuPrincipal();
+            dibujarMarcoEstaticoPrincipal(); // Al regresar al menu principal de afuera, redibuja el logo grande
         } else {
-            cout << "\n[!] Usuario no encontrado. Presione Enter para volver...";
+            gotoxy(35, 21); cout << "\033[31m[!] Usuario o Contrasena incorrectos. Presione Enter...\033[0m";
             obtenerTecla();
         }
     }
 
     void menuPrincipal() {
+        dibujarMarcoUsuarioLogueado();
         bool cerrarSesion = false;
+        
         while (!cerrarSesion) {
-            limpiarPantalla();
-            cout << string(110, '=') << "\n";
-            imprimirCentrado("=== SPOTIFY: MENU PRINCIPAL ===");
-            imprimirCentrado("Usuario Actual: " + usuarioActual.getUsername() + " | Email: " + usuarioActual.getEmail());
-            cout << string(110, '=') << "\n\n";
+            borrarArea(5, 8, 100, 25);
             
-            imprimirCentrado("1. Perfil y Usuarios");
-            imprimirCentrado("2. Explorar Canciones (Arbol AVL)");
-            imprimirCentrado("3. Mis Playlists (Lista Doblemente Enlazada)");
-            imprimirCentrado("4. Recomendaciones Inteligentes (Grafo)");
-            imprimirCentrado("5. Cerrar Sesion");
-            cout << "\n" << string(110, '=') << "\n";
-            cout << "> Seleccione una opcion: ";
+            vector<string> opciones = {
+                "Perfil y Usuarios",
+                "Explorar Canciones (Arbol AVL)",
+                "Mis Playlists (Lista Doblemente Enlazada)",
+                "Recomendaciones Inteligentes (Grafo)",
+                "Cerrar Sesion"
+            };
+            
+            int startX = (110 - 45) / 2;
+            int seleccion = menuInteractivo(opciones, startX, 10);
 
-            string opcion;
-            getline(cin, opcion);
-
-            if (opcion == "1") {
-                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
-            } else if (opcion == "2") {
-                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
-            } else if (opcion == "3") {
-                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
-            } else if (opcion == "4") {
-                cout << "\nModulo en construccion... Presione Enter."; obtenerTecla();
-            } else if (opcion == "5") {
+            if (seleccion >= 0 && seleccion <= 3) {
+                borrarArea(5, 8, 100, 25);
+                gotoxy(35, 15); cout << "\033[33mModulo en construccion... Presione Enter.\033[0m";
+                obtenerTecla();
+            } else if (seleccion == 4) {
                 usuarioLogueado = false;
                 cerrarSesion = true;
             }

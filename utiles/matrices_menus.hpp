@@ -112,15 +112,8 @@ void sobreescribirMatriz(int fila, int columna, const vvi& matriz, const vvi& fo
 
 #pragma region matrices
 
-//matriz spotify;
 
-vvi matriz_spotify = {
-{2,	2,	2,	0,	2,	2,	2,	0,	2,	2,	2,	0,	2,	2,	2,	0,	2,	0,	2,	2,	2,	0,	2,	0,	2},
-{2,	0,	0,	0,	2,	0,	2,	0,	2,	0,	2,	0,	0,	2,	0,	0,	2,	0,	2,	0,	0,	0,	2,	0,	2},
-{2,	2,	2,	0,	2,	2,	2,	0,	2,	0,	2,	0,	0,	2,	0,	0,	2,	0,	2,	2,	2,	0,	2,	2,	2},
-{0,	0,	2,	0,	2,	0,	0,	0,	2,	0,	2,	0,	0,	2,	0,	0,	2,	0,	2,	0,	0,	0,	0,	2,	0},
-{2,	2,	2,	0,	2,	0,	0,	0,	2,	2,	2,	0,	0,	2,	0,	0,	2,	0,	2,	0,	0,	0,	0,	2,	0},
-};
+
 
 
 
@@ -133,14 +126,6 @@ vvi matriz_spotify = {
 //menu inicio
 
 
-void imp_menu_inicio(){
-
-    imprimirMatriz(1, (110 / 2) - matriz_spotify[0].size() / 2, matriz_spotify);
-
-
-
-    
-}
 
 
 
