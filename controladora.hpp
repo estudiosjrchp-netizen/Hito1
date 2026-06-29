@@ -56,13 +56,9 @@ void Controladora::dibujarInterfazEstatica() {
     // Limpiamos todo al arrancar la app por primera vez
     std::cout << "\033[2J\033[1;1H"; 
 
-    // Aquí llamas a tu matriz de utiles/matrices_menus.hpp
-    std::cout << "\033[33m"; // Cambiar color a Amarillo
+    std::cout << "\033[33m"; 
     
-    // EJEMPLO: Dibujar logo en la fila 2, columna 5
-    // dibujarLogoSpotifyMatriz(); 
-    
-    std::cout << "\033[0m";  // RESET de color importantísimo
+    std::cout << "\033[0m";  
 }
 
 void Controladora::mostrarMenuTextual() {
@@ -81,15 +77,13 @@ void Controladora::mostrarMenuTextual() {
     std::cout << "\033[" << fila + 3 << ";" << col << "H" << (opcionSeleccionada == 1 ? "\033[32m> 2. Explorar Canciones\033[0m" : "  2. Explorar Canciones");             
     std::cout << "\033[" << fila + 4 << ";" << col << "H" << (opcionSeleccionada == 2 ? "\033[32m> 3. Mis Playlists\033[0m" : "  3. Mis Playlists");
     std::cout << "\033[" << fila + 5 << ";" << col << "H" << (opcionSeleccionada == 3 ? "\033[32m> 4. Salir\033[0m" : "  4. Salir");
-    // Importante: forzar que la consola imprima los cambios inmediatamente
     std::cout << std::flush; 
 }
 
 void Controladora::procesarEntrada() {
-    // Asumiendo que teclado.hpp tiene una función que lee un caracter.
     // ESTA FUNCIÓN DEBE DETENER EL BUCLE HASTA QUE PRESIONES ALGO.
-    char tecla = obtenerTecla(); // <- Reemplaza por tu función real de teclado.hpp
-    
+    char tecla = obtenerTecla(); 
+
     // En Linux, las flechas envían 27 (ESC), 91 ([), y luego 65 (Arriba) o 66 (Abajo)
     if (tecla == 27) { 
         char corchete = obtenerTecla();
@@ -104,38 +98,34 @@ void Controladora::procesarEntrada() {
             }
         }
     } 
-    // Tecla Enter (en Linux suele ser 10 ('\n'), en otros 13 ('\r'))
+
     else if (tecla == 10 || tecla == 13) {
         ejecutarAccion(opcionSeleccionada);
     }
 }
 
 void Controladora::ejecutarAccion(int opcion) {
-    // Borramos el área de mensajes abajo del menú para dar feedback
+
     borrarPorcion(25, 37, 2, 50);
-    std::cout << "\033[25;37H"; // Nos posicionamos debajo del menú
+    std::cout << "\033[25;37H"; 
     
     switch(opcion) {
         case 0:
             std::cout << "Abriendo módulo de Perfil y Usuarios...";
-            // Aquí instanciarías Usuario.hpp o Perfil.hpp
             break;
         case 1:
             std::cout << "Abriendo Explorador de Canciones...";
-            // Aquí enlazas con Cancion.hpp
             break;
         case 2:
             std::cout << "Cargando Playlists...";
-            // Aquí enlazas con PlayList.hpp
             break;
         case 3:
             std::cout << "Saliendo de la app. ¡Hasta pronto!";
-            ejecutando = false; // Rompe el bucle principal
+            ejecutando = false; 
             break;
     }
     
-    // Pausar un momento para que el profe vea que entró a la opción
-    // Puedes reemplazar esto con tu propia función de espera
+ 
     std::cout << "\nPresiona cualquier tecla para volver...";
     obtenerTecla(); 
 }
