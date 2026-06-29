@@ -14,7 +14,7 @@ private:
     size_t num_elements;
     size_t capacity;
     
-    // MODIFICACIÓN: Atributo para almacenar la lambda de la función Hash compleja
+    // Atributo para almacenar la lambda de la funcion Hash compleja
     function<size_t(const K&)> hash_func;
 
     size_t get_hash(const K& key) const {
@@ -22,7 +22,7 @@ private:
     }
 
 public:
-    // MODIFICACIÓN: El constructor ahora recibe la lambda. Por defecto usa una básica si no se envía nada.
+    // El constructor ahora recibe la lambda. Por defecto usa una basica si no se envia nada.
     HashTable(size_t size = 10, function<size_t(const K&)> hf = [](const K& k){ return hash<K>{}(k); }) 
         : capacity(size), num_elements(0), hash_func(hf) {
         table.resize(capacity);
@@ -72,5 +72,17 @@ public:
             }
             cout << "NULL\n";
         }
+    }
+
+    // --- NUEVO METODO PARA EL HITO 1 ---
+    // Permite extraer los datos al vector para usar el ordenamiento avanzado
+    vector<V> get_all() const {
+        vector<V> elements;
+        for (const auto& bucket : table) {
+            for (const auto& kv : bucket) {
+                elements.push_back(kv.second);
+            }
+        }
+        return elements;
     }
 };
