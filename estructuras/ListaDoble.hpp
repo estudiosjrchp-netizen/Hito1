@@ -2,14 +2,17 @@
 #define LISTADOBLE_HPP
 
 template <typename T>
-class ListaDoble {
-private:
-    struct Nodo {
+struct Nodo {
         T dato;
         Nodo* siguiente;
         Nodo* anterior;
         Nodo(T d) : dato(d), siguiente(nullptr), anterior(nullptr) {}
     };
+
+template <typename T>
+class ListaDoble {
+private:
+
     Nodo* inicio;
     Nodo* fin;
     int tamano;
