@@ -1,55 +1,73 @@
-#ifndef HASH_TABLE_HPP
-#define HASH_TABLE_HPP
-
+#include <iostream>
 #include <vector>
+#include <list>
 #include <string>
 #include <functional>
 
-int miFuncionHashCompleja(const std::string& clave, int capacidad_tabla) {
-    long long hash_value = 0;
-    const int p = 31;
-    const int m = 1e9 + 9;
-    long long p_pow = 1;
-    for (char c : clave) {
-        hash_value = (hash_value + (c - 'a' + 1) * p_pow) % m;
-        p_pow = (p_pow * p) % m;
-    }
-    return hash_value % capacidad_tabla;
-}
+using namespace std;
 
 template <typename K, typename V>
-class Hash_Table {
+class HashTable {
 private:
-    struct Nodo {
-        K clave;
-        V valor;
-        Nodo* siguiente;
-        Nodo(K c, V v) : clave(c), valor(v), siguiente(nullptr) {}
-    };
-    std::vector<Nodo*> tabla;
-    int capacidad;
+    vector<list<pair<K, V>>> table;
+    size_t num_elements;
+    size_t capacity;
+
+    size_t get_hash(const K& key) const {
+        return hash<K>{}(key) % capacity;
+    }
 
 public:
-    Hash_Table(int cap = 101) : capacidad(cap) {
-        tabla.assign(capacidad, nullptr);
+    HashTable(size_t size = 10) : capacity(size), num_elements(0) {
+        table.resize(capacity);
     }
 
-    void insertar(const K& clave, const V& valor) {
-        int indice = miFuncionHashCompleja(clave, capacidad);
-        Nodo* nuevo = new Nodo(clave, valor);
-        nuevo->siguiente = tabla[indice];
-        tabla[indice] = nuevo;
-    }
-
-    V* buscar(const K& clave) {
-        int indice = miFuncionHashCompleja(clave, capacidad);
-        Nodo* actual = tabla[indice];
-        while (actual != nullptr) {
-            if (actual->clave == clave) return &(actual->valor);
-            actual = actual->siguiente;
+    void insert(const K& key, const V& value) {
+        size_t index = get_hash(key);
+        
+        for (auto& kv : table[index]) {
+            if (kv.first == key) {
+                kv.second = value; // Actualizar si la clave ya existe
+                return;
+            }
         }
-        return nullptr;
+        // Agregar al final del bucket si no existe
+        table[index].emplace_back(key, value);
+        num_elements++;
+    }
+
+    bool search(const K& key, V& value_out) const {
+        size_t index = get_hash(key);
+        for (const auto& kv : table[index]) {
+            if (kv.first == key) {
+                value_out = kv.second;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool remove(const K& key) {
+        size_t index = get_hash(key);
+        auto& bucket = table[index];
+        
+        for (auto it = bucket.begin(); it != bucket.end(); ++it) {
+            if (it->first == key) {
+                bucket.erase(it);
+                num_elements--;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void display() const {
+        for (size_t i = 0; i < capacity; i++) {
+            cout << "Bucket " << i << ": ";
+            for (const auto& kv : table[i]) {
+                cout << "{" << kv.first << ": " << kv.second << "} -> ";
+            }
+            cout << "NULL\n";
+        }
     }
 };
-
-#endif
