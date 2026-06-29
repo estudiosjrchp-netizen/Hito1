@@ -1,6 +1,6 @@
 #pragma once
-#include "utiles/matrices_menus.hpp"
-#include "utiles/teclado.hpp"
+
+#include "utiles/Dependencias.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -75,7 +75,7 @@ private:
                     cout << "  " << opciones[i] << "     ";
                 }
             }
-
+            cout.flush();
             char tecla = obtenerTecla();
             
             // W o Flecha Arriba
